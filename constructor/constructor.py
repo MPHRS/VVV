@@ -1,28 +1,11 @@
 from typing import (List, Tuple)
 import numpy as np
-from exeptions import NegativeValueError
-from exeptions import GapsMolGraphError
-from exeptions import MolGraphSimplicityError
-from exeptions import MolGraphConnectionError
+from exceptions import NegativeValueError
+from exceptions import GapsMolGraphError
+from exceptions import MolGraphSimplicityError
+from exceptions import MolGraphConnectionError
+from periodic_box import Box
 
-
-def periodic(coord, box):
-    if abs(coord) > 0.5 * box:
-        return coord - np.sign(coord) * box
-    return coord
-
-
-class Box():
-    def __init__(self, x, y, z):
-        self.x = x
-        self.y = y
-        self.z = z
-
-    def periodic_correct(self, xb, yb, zb):
-        xb = periodic(xb, self.x)
-        yb = periodic(yb, self.y)
-        zb = periodic(zb, self.z)
-        return xb, yb, zb
 
 
 def rnd_vector(length_bond=1.0):

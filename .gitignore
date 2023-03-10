@@ -1,3 +1,2 @@
-/.venv
-/.mypy_cache
-/constructor/__pycache__
+/.
+__pycache__
