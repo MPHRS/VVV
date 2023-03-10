@@ -14,11 +14,12 @@ def periodic(coord: float, box: float) -> float:
     Returns:
         float: changed (or old) coordinate
     """
-    if abs(coord) > box:
+    if abs(coord) > 1.5 * box:
         raise OutBoxError
-    if abs(coord) > 0.5 * box:
+    elif abs(coord) > 0.5 * box:
         return coord - np.sign(coord) * box
-    return coord
+    else:
+        return coord
 
 
 class Box():
