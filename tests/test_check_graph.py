@@ -1,6 +1,7 @@
 import bondset
 import pytest
 from check_graph import CheckGraph
+from exceptions import NegativeValueError
 
 
 class TestCheckGraph:
@@ -13,7 +14,7 @@ class TestCheckGraph:
 
     @pytest.mark.parametrize("bonds", [(bondset.NEGATIVE),])
     def test_is_not_gaps_raises(self,  bonds: bondset.Bondtype) -> None:
-        with pytest.raises(Exception) as err:
+        with pytest.raises(NegativeValueError) as err:
             CheckGraph.is_not_gaps(bonds)
         assert "Some node in grpah is negative" in str(err.value)
 

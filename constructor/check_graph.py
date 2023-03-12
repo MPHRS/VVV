@@ -122,16 +122,4 @@ class CheckGraph():
             return True
         return False
     
-if __name__ == '__main__':
-    bonds0: List[Tuple[int,int]] = []
-    #bonds1 = [(1, 2), (2, 1), (0, 5), (5, 4)]
-    bonds2 = [(1, 2), (2, 3), (3, 5), (5, 5)]
-    bonds3 = [(1, 2), (2, 3), (-1, 5), (5, 4)]
-    print(CheckGraph.is_simple(bonds0))
-    print(CheckGraph.is_connected(bonds0))
-    print(CheckGraph.is_directed(bonds0))
-    try:
-        print(CheckGraph.is_not_gaps(bonds3))
-    except NegativeValueError as err:
-        print(err)
         
