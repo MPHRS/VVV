@@ -12,8 +12,10 @@ class CheckGraph():
         """
         Detects gaps or invalid value in node enum,
         bonds-list can be empty, but node ids must
+
         i) be enumerated from 0 to max id without gaps,
-        ii) containe only non-negative integers
+
+        ii) contain only non-negative integers
 
         Args:
             bonds (List[Tuple[int,int]]): list of bonded node ids 
@@ -21,7 +23,7 @@ class CheckGraph():
         Raises:
             NegativeValueError: if a negative id is found
         Returns:
-            bool: _description_
+            bool: True if there are no gaps, False otherwise
         """    
         nodes = set([bond[0] for bond in bonds] + [bond[1] for bond in bonds])
         if any([i < 0 for i in nodes]):
@@ -29,11 +31,20 @@ class CheckGraph():
         num_nodes = len(nodes)
         return num_nodes * (num_nodes -1) / 2 == sum(nodes)
 
+    @staticmethod
+    def is_simple(bonds: Bondtype) -> bool:
+        """
+        Checks for the absence of multiple and cyclic edges
+        Likes that: (1, 2) and (2, 1), (0, 0), (1, 1) etc.
 
-    # def is_simple(bonds: List[List[int]]) -> bool:
-    #     new_bonds = [(bond[0], bond[1]) for bond in bonds] + \
-    #         [(bond[1], bond[0]) for bond in bonds]
-    #     return len(new_bonds) == len(list(set(new_bonds)))
+        Args:
+            bonds (List[Tuple[int,int]]): list of bonded node ids
+
+        Returns:
+            bool: True it the graph is simple, False otherwise
+        """
+        new_bonds: Bondtype = bonds + [(bond[1], bond[0]) for bond in bonds]
+        return len(new_bonds) == len(set(new_bonds))
 
     # def is_connected(bonds: List[List[int]]) -> bool:
     #     label = dict()
@@ -78,12 +89,12 @@ class CheckGraph():
     
 if __name__ == '__main__':
     bonds0: List[Tuple[int,int]] = []
-    bonds1 = [(1, 2), (2, 3), (0, 5), (5, 4)]
-    bonds2 = [(1, 2), (2, 3), (1, 5), (5, 4)]
+    bonds1 = [(1, 2), (2, 1), (0, 5), (5, 4)]
+    bonds2 = [(1, 2), (3, 3), (1, 5), (5, 4)]
     bonds3 = [(1, 2), (2, 3), (-1, 5), (5, 4)]
-    print(CheckGraph.is_not_gaps(bonds0))
-    print(CheckGraph.is_not_gaps(bonds1))
-    print(CheckGraph.is_not_gaps(bonds2))
+    print(CheckGraph.is_simple(bonds0))
+    print(CheckGraph.is_simple(bonds1))
+    print(CheckGraph.is_simple(bonds2))
     try:
         print(CheckGraph.is_not_gaps(bonds3))
     except NegativeValueError as err:
