@@ -1,6 +1,6 @@
 from typing import Final
 import pytest
-from constructor.periodic_box import periodic
+from periodic_box import periodic
 
 
 EPS: Final = 1e-8

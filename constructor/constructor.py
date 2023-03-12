@@ -1,11 +1,10 @@
-from typing import (List, Tuple)
-import numpy as np
-from exceptions import GapsMolGraphError
-from exceptions import MolGraphSimplicityError
-from exceptions import MolGraphConnectionError
-from periodic_box import Box
-from check_graph import CheckGraph
+from typing import List, Tuple
 
+import numpy as np
+from check_graph import CheckGraph
+from exceptions import (GapsMolGraphError, MolGraphConnectionError,
+                        MolGraphSimplicityError)
+from periodic_box import Box
 
 
 def rnd_vector(length_bond=1.0):
