@@ -1,13 +1,28 @@
-from typing import List, Tuple, Optional
+from typing import List, Tuple
 
 import numpy as np
 from exceptions import NegativeValueError
-
+from bondset import Bondtype
 
 class CheckGraph():
     """ Pre-check of any molecular graph """
+
     @staticmethod
-    def is_not_gaps(bonds: List[Tuple[int,int]]) -> bool:     
+    def is_not_gaps(bonds: Bondtype) -> bool: 
+        """
+        Detects gaps or invalid value in node enum,
+        bonds-list can be empty, but node ids must
+        i) be enumerated from 0 to max id without gaps,
+        ii) containe only non-negative integers
+
+        Args:
+            bonds (List[Tuple[int,int]]): list of bonded node ids 
+
+        Raises:
+            NegativeValueError: if a negative id is found
+        Returns:
+            bool: _description_
+        """    
         nodes = set([bond[0] for bond in bonds] + [bond[1] for bond in bonds])
         if any([i < 0 for i in nodes]):
             raise NegativeValueError
