@@ -1,5 +1,6 @@
 from typing import Optional
 
+
 class NegativeValueError(Exception):
     def __str__(self):
         return "Some node in grpah is negative"

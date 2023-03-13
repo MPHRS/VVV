@@ -1,4 +1,4 @@
-from typing import Dict, Final, List, Optional, Tuple
+from typing import Dict, Final, Optional, Tuple
 
 import numpy as np
 from bondset import Bondtype
@@ -11,7 +11,6 @@ from periodic_box import Box
 BOND_LENGTH: Final[float] = (1./3.) ** (1./3.)
 ITERATION_LIMIT: Final[int] = 1000
 EPS = 0.001
-
 
 def rnd_vector(length: float = BOND_LENGTH) -> np.ndarray:
     """
@@ -88,7 +87,7 @@ class MolGraph():
                    iteration_limit: int = ITERATION_LIMIT,
                    periodic: bool = True) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
-        Get coordinates of the molecular graph in 3D-box
+        Gets coordinates of the molecular graph in 3D-box
 
         Args:
             fixed_coords (Optional[Dict[int, Tuple[float,float,float]]]): list of fixed beads
@@ -105,9 +104,6 @@ class MolGraph():
         Returns:
             Tuple[np.ndarray, np.ndarray, np.ndarray]: x, y, z coordinates
         """
-        # x = np.zeros(self.num_beads)
-        # y = np.zeros(self.num_beads)
-        # z = np.zeros(self.num_beads)
         x = np.random.uniform(-box.x / 2, box.x / 2, self.num_beads)
         y = np.random.uniform(-box.y / 2, box.y / 2, self.num_beads)
         z = np.random.uniform(-box.z / 2, box.z / 2, self.num_beads)
@@ -126,9 +122,7 @@ class MolGraph():
                 if not box.check_in_box(x[id], y[id], z[id]):
                     raise FixedOutBoxError
         else:
-            x[0] = np.random.uniform(-box.x / 2, box.x / 2)
-            y[0] = np.random.uniform(-box.y / 2, box.y / 2)
-            z[0] = np.random.uniform(-box.z / 2, box.z / 2)
+            fixed_coords = {0: (x[0], y[0], z[0])}
             only_id0_fixed = True
 
         if only_id0_fixed and self.directed and (not self.cyclical):
@@ -156,65 +150,47 @@ class MolGraph():
                         z[bond[1]] = zt
                         break
         else:
-            # random graph generation
-            dt: float = 0.5
-            # x = np.random.uniform(-box.x / 2, box.x / 2, self.num_beads)
-            # y = np.random.uniform(-box.y / 2, box.y / 2, self.num_beads)
-            # z = np.random.uniform(-box.z / 2, box.z / 2, self.num_beads)
+            ## random graph generation (only without periodic conditions)
             r_max: float = bond_length * 2
             r_min: float = 0.0
+            force = lambda x: (bond_length/x - 1.0) * 0.5
+            fx = np.zeros(self.num_beads)
+            fy = np.zeros(self.num_beads)
+            fz = np.zeros(self.num_beads)
             num_iter = 0
             while r_max - r_min > bond_length * EPS:
                 num_iter += 1
                 if num_iter > iteration_limit:
                     raise IterationLimitError(iteration_limit)
-                fx = np.zeros(self.num_beads)
-                fy = np.zeros(self.num_beads)
-                fz = np.zeros(self.num_beads)
+                fx[:] = 0.0
+                fy[:] = 0.0
+                fz[:] = 0.0
                 r_max = 0.
                 r_min = bond_length * 2
                 for b in self.bonds:
                     dx = x[b[0]] - x[b[1]]
                     dy = y[b[0]] - y[b[1]]
                     dz = z[b[0]] - z[b[1]]
-                    if periodic:
-                        dx, dy, dz = box.periodic_correct(dx, dy, dz)
                     r = np.sqrt(dx**2 + dy**2 + dz**2)
                     if r > r_max:
                         r_max = r
-                        # print(b[0],b[1])
                     if r < r_min:
                         r_min = r
-                    f = (bond_length/r - 1.0)
-                    if b[0] in fixed_coords or b[1] in fixed_coords:
-                        mult = 0.5
-                    else:
-                        mult = 1.0
-                    fx[b[0]] += f * dx * mult
-                    fx[b[1]] -= f * dx * mult
-                    fy[b[0]] += f * dy * mult
-                    fy[b[1]] -= f * dy * mult
-                    fz[b[0]] += f * dz * mult
-                    fz[b[1]] -= f * dz * mult
-                # print(r_min, r_max)
+                    f = force(r)
+                    fx[b[0]] += f * dx
+                    fx[b[1]] -= f * dx
+                    fy[b[0]] += f * dy
+                    fy[b[1]] -= f * dy
+                    fz[b[0]] += f * dz
+                    fz[b[1]] -= f * dz
                 for i in range(self.num_beads):
                     if not (i in fixed_coords):
-                        xt = x[i] + fx[i] * dt
-                        yt = y[i] + fy[i] * dt
-                        zt = z[i] + fz[i] * dt
-                        if periodic:
-                            x[i], y[i], z[i] = box.periodic_correct(xt, yt, zt)
-                        else:
-                            if box.check_in_box(xt, yt, xt):
-                                x[i], y[i], z[i] = xt, yt, zt
-
+                        xt = x[i] + fx[i]
+                        yt = y[i] + fy[i]
+                        zt = z[i] + fz[i]
+                        if box.check_in_box(xt, yt, xt):
+                            x[i], y[i], z[i] = xt, yt, zt
         return x, y, z
-
-# class Chain(MolGraph):
-#     def __init__(self, n_beads: int):
-#         self.n_beads = n_beads
-#         self.bonds: Bondtype = [(0, 1), (1, 2)]
-#         super().__init__(self.bonds)
 
 
 if __name__ == '__main__':
@@ -223,5 +199,5 @@ if __name__ == '__main__':
     # graph.get_coords(fixed_coords={0: (-1,-1,-1), 5: (1,1,1)}, box=box)
     x, y, z = graph.get_coords(fixed_coords={0: (-1, -1, -1), 5: (1, 1, 1)},
                                box=box,
-                               iteration_limit=10000)
+                               iteration_limit=1000)
     print(x, y, z)

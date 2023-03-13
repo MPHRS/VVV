@@ -1,6 +1,7 @@
+from typing import Tuple
+
 import numpy as np
 from exceptions import OutBoxError
-from typing import Tuple
 
 
 class Box():

@@ -4,7 +4,7 @@ import pytest
 from exceptions import OutBoxError
 from periodic_box import Box
 
-EPS: Final = 1e-8
+EPS: Final[float] = 1e-8
 
 
 def test_periodic():
