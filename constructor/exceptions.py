@@ -29,5 +29,9 @@ class FixedDictError(Exception):
 class FixedOutBoxError(Exception):
     def __str__(self):
         return "Fixed bead occure out of box > 0.5 box" 
+    
+class EmptyGraphError(Exception):
+    def __str__(self):
+        return "Graph is empty"
         
         

@@ -5,7 +5,7 @@ from bondset import Bondtype
 from check_graph import CheckGraph
 from exceptions import (FixedDictError, FixedOutBoxError, FixedRootError,
                         GapsMolGraphError, MolGraphConnectionError,
-                        MolGraphSimplicityError)
+                        MolGraphSimplicityError, EmptyGraphError)
 from periodic_box import Box
 
 BOND_LENGTH: Final[float] = (1./3.) ** (1./3.)
@@ -51,6 +51,8 @@ class MolGraph():
         if sort:
             self.bonds = sorted([(min(bond), max(bond)) for bond in bonds])
         # Check graph for critical exceptions
+        if not self.bonds:
+            raise EmptyGraphError
         if not CheckGraph.is_not_gaps(self.bonds):
             raise GapsMolGraphError
         if not CheckGraph.is_simple(self.bonds):
@@ -98,6 +100,7 @@ class MolGraph():
             x[0] = np.random.uniform(-box.x / 2, box.x / 2)
             y[0] = np.random.uniform(-box.y / 2, box.y / 2)
             z[0] = np.random.uniform(-box.z / 2, box.z / 2)
+            only_id0_fixed = True
 
         if only_id0_fixed and self.directed and (not self.cyclical):
             for bond in self.bonds:             
@@ -122,10 +125,20 @@ class MolGraph():
     
         return x, y, z
     
+class Chain(MolGraph):
+    def __init__(self, n_beads: int):
+        self.n_beads = n_beads
+        self.bonds: Bondtype = [(0, 1), (1, 2)]
+        super().__init__(self.bonds)
+
+    
 
 if __name__ == '__main__':
     box = Box(10, 10, 10)
     graph = MolGraph([(0, 1), (1, 2)])
-    graph.get_coords(fixed_coords={0: (1,2,3), 1: (2,3,9), 2: (0,0,0)}, box=box)
+    #graph.get_coords(fixed_coords={0: (1,2,3), 1: (2,3,9), 2: (0,0,0)}, box=box)
+    chain = Chain(n_beads=2)
+    print(chain.cyclical, chain.num_beads)
+    print(chain.get_coords(fixed_coords=None, box=box, periodic=False))
     
     
