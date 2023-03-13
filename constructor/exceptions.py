@@ -1,3 +1,5 @@
+from typing import Optional
+
 class NegativeValueError(Exception):
     def __str__(self):
         return "Some node in grpah is negative"
@@ -33,5 +35,14 @@ class FixedOutBoxError(Exception):
 class EmptyGraphError(Exception):
     def __str__(self):
         return "Graph is empty"
+    
+class IterationLimitError(Exception):
+    def __init__(self, iteration_limit: Optional[int] = None):
+        if iteration_limit:
+            self.message: str = '< ' + str(iteration_limit)
+        else:
+            self.message = str('see MolGraph.get_coords info')
+    def __str__(self):
+        return f"Iteration limit is over ({self.message})"
         
         

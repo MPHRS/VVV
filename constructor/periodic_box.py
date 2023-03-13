@@ -42,7 +42,9 @@ class Box():
         Returns:
             bool: True if the bead is in the box, False otherwise
         """
-        return any([abs(xb) > self.x, abs(yb) > self.y, abs(zb) > self.z])
+        return all([abs(xb) < 0.5 * self.x,
+                    abs(yb) < 0.5 * self.y, 
+                    abs(zb) < 0.5 * self.z])
     
     @staticmethod
     def periodic(coord: float, box: float) -> float:

@@ -5,10 +5,12 @@ from bondset import Bondtype
 from check_graph import CheckGraph
 from exceptions import (FixedDictError, FixedOutBoxError, FixedRootError,
                         GapsMolGraphError, MolGraphConnectionError,
-                        MolGraphSimplicityError, EmptyGraphError)
+                        MolGraphSimplicityError, EmptyGraphError,
+                        IterationLimitError)
 from periodic_box import Box
 
 BOND_LENGTH: Final[float] = (1./3.) ** (1./3.)
+ITERATION_LIMIT: Final[int] = 1000
 
 def rnd_vector(length: float = BOND_LENGTH) -> np.ndarray:
     """
@@ -21,7 +23,7 @@ def rnd_vector(length: float = BOND_LENGTH) -> np.ndarray:
         np.ndarray: random 3D vector of any given length
     """
     v = np.random.uniform(-1.0, 1.0, 3)
-    v /= np.sqrt(np.sum(v**2)) * length
+    v = v / np.sqrt(np.sum(v**2)) * length
     return v
 
 
@@ -76,14 +78,13 @@ class MolGraph():
 
     def get_coords(self, fixed_coords: Optional[Dict[int, Tuple[float,float,float]]],
                    box: Box, 
-                   bond_length: float = BOND_LENGTH, 
+                   bond_length: float = BOND_LENGTH,
+                   iteration_limit: int = ITERATION_LIMIT, 
                    periodic: bool = True) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         
         x = np.zeros(self.num_beads)
         y = np.zeros(self.num_beads)
         z = np.zeros(self.num_beads)
-
-        only_id0_fixed: bool = False
         if fixed_coords:
             if 0 in fixed_coords:
                 if len(fixed_coords) == 1:
@@ -104,8 +105,12 @@ class MolGraph():
 
         if only_id0_fixed and self.directed and (not self.cyclical):
             for bond in self.bonds:             
-                label_to_break = True
-                while label_to_break:
+                label_to_break = False
+                num_iter = 0
+                while not label_to_break:
+                    num_iter += 1
+                    if num_iter > iteration_limit:
+                        raise IterationLimitError(iteration_limit)
                     v = rnd_vector(length=bond_length)
                     xt = x[bond[0]] + v[0]
                     yt = y[bond[0]] + v[1]
@@ -113,8 +118,12 @@ class MolGraph():
                     if not box.check_in_box(xt, yt, zt):
                         if periodic:
                             xt, yt, zt = box.periodic_correct(xt, yt, zt)
+                            label_to_break = True
                         else:
-                            label_to_break = False
+                            if box.check_in_box(xt, yt, zt):
+                                label_to_break = True
+                    else:
+                        label_to_break = True
                     if label_to_break:
                         x[bond[1]] = xt
                         y[bond[1]] = yt
@@ -134,7 +143,7 @@ class Chain(MolGraph):
     
 
 if __name__ == '__main__':
-    box = Box(10, 10, 10)
+    box = Box(5., 4., 3.)
     graph = MolGraph([(0, 1), (1, 2)])
     #graph.get_coords(fixed_coords={0: (1,2,3), 1: (2,3,9), 2: (0,0,0)}, box=box)
     chain = Chain(n_beads=2)
