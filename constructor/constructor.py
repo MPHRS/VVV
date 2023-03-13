@@ -3,15 +3,15 @@ from typing import Dict, Final, List, Optional, Tuple
 import numpy as np
 from bondset import Bondtype
 from check_graph import CheckGraph
-from exceptions import (FixedDictError, FixedOutBoxError, FixedRootError,
-                        GapsMolGraphError, MolGraphConnectionError,
-                        MolGraphSimplicityError, EmptyGraphError,
-                        IterationLimitError)
+from exceptions import (EmptyGraphError, FixedDictError, FixedOutBoxError,
+                        FixedRootError, GapsMolGraphError, IterationLimitError,
+                        MolGraphConnectionError, MolGraphSimplicityError)
 from periodic_box import Box
 
 BOND_LENGTH: Final[float] = (1./3.) ** (1./3.)
 ITERATION_LIMIT: Final[int] = 1000
 EPS = 0.001
+
 
 def rnd_vector(length: float = BOND_LENGTH) -> np.ndarray:
     """
@@ -39,6 +39,7 @@ class MolGraph():
         self.cyclical (bool): True if graph is cyclical, False otherwise
         self.directed (bool): True if graph is directed, False otherwise
     """
+
     def __init__(self, bonds: Bondtype, sort: bool = True) -> None:
         """
         Args:
@@ -54,7 +55,7 @@ class MolGraph():
         if sort:
             self.bonds = sorted([(min(bond), max(bond)) for bond in bonds])
         else:
-            self.bonds = bonds    
+            self.bonds = bonds
         # Check graph for critical exceptions
         if not self.bonds:
             raise EmptyGraphError
@@ -65,7 +66,8 @@ class MolGraph():
         if not CheckGraph.is_connected(self.bonds):
             raise MolGraphConnectionError
         # Searchig for max index in the bond list
-        self.num_beads: int = max([max(bond[0],bond[1]) for bond in bonds]) + 1
+        self.num_beads: int = max([max(bond[0], bond[1])
+                                  for bond in bonds]) + 1
         self.num_bonds: int = len(self.bonds)
         # Basic properties for building a graph
         self.cyclical: bool = (self.num_bonds >= self.num_beads)
@@ -79,10 +81,11 @@ class MolGraph():
             Directed = {self.directed}            
             """
 
-    def get_coords(self, box: Box, 
-                   fixed_coords: Optional[Dict[int, Tuple[float,float,float]]] = None,
+    def get_coords(self, box: Box,
+                   fixed_coords: Optional[Dict[int,
+                                               Tuple[float, float, float]]] = None,
                    bond_length: float = BOND_LENGTH,
-                   iteration_limit: int = ITERATION_LIMIT, 
+                   iteration_limit: int = ITERATION_LIMIT,
                    periodic: bool = True) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Get coordinates of the molecular graph in 3D-box
@@ -98,17 +101,22 @@ class MolGraph():
             FixedRootError: First id of fixed beads not equal 0
             FixedDictError: Fixed beads is out of range (0, num_beads)
             FixedOutBoxError: Coordinates of fixed beads out box
-            
+
         Returns:
             Tuple[np.ndarray, np.ndarray, np.ndarray]: x, y, z coordinates
         """
-        x = np.zeros(self.num_beads)
-        y = np.zeros(self.num_beads)
-        z = np.zeros(self.num_beads)
+        # x = np.zeros(self.num_beads)
+        # y = np.zeros(self.num_beads)
+        # z = np.zeros(self.num_beads)
+        x = np.random.uniform(-box.x / 2, box.x / 2, self.num_beads)
+        y = np.random.uniform(-box.y / 2, box.y / 2, self.num_beads)
+        z = np.random.uniform(-box.z / 2, box.z / 2, self.num_beads)
         if fixed_coords:
             if 0 in fixed_coords:
                 if len(fixed_coords) == 1:
                     only_id0_fixed = True
+                else:
+                    only_id0_fixed = False
             else:
                 raise FixedRootError
             if any([(i < 0 and i >= self.num_beads) for i in fixed_coords]):
@@ -124,8 +132,8 @@ class MolGraph():
             only_id0_fixed = True
 
         if only_id0_fixed and self.directed and (not self.cyclical):
-        ## sequential graph generation
-            for bond in self.bonds:             
+            # sequential graph generation
+            for bond in self.bonds:
                 label_to_break = False
                 num_iter = 0
                 while not label_to_break:
@@ -148,11 +156,11 @@ class MolGraph():
                         z[bond[1]] = zt
                         break
         else:
-        ## random graph generation
+            # random graph generation
             dt: float = 0.5
-            x = np.random.uniform(-box.x / 2, box.x / 2, self.num_beads)
-            y = np.random.uniform(-box.y / 2, box.y / 2, self.num_beads)
-            z = np.random.uniform(-box.z / 2, box.z / 2, self.num_beads) 
+            # x = np.random.uniform(-box.x / 2, box.x / 2, self.num_beads)
+            # y = np.random.uniform(-box.y / 2, box.y / 2, self.num_beads)
+            # z = np.random.uniform(-box.z / 2, box.z / 2, self.num_beads)
             r_max: float = bond_length * 2
             r_min: float = 0.0
             num_iter = 0
@@ -169,40 +177,51 @@ class MolGraph():
                     dx = x[b[0]] - x[b[1]]
                     dy = y[b[0]] - y[b[1]]
                     dz = z[b[0]] - z[b[1]]
+                    if periodic:
+                        dx, dy, dz = box.periodic_correct(dx, dy, dz)
                     r = np.sqrt(dx**2 + dy**2 + dz**2)
                     if r > r_max:
                         r_max = r
+                        # print(b[0],b[1])
                     if r < r_min:
                         r_min = r
-                    f = (bond_length/r -1.0)
-                    fx[b[0]] += f * dx
-                    fx[b[1]] -= f * dx
-                    fy[b[0]] += f * dy
-                    fy[b[1]] -= f * dy
-                    fz[b[0]] += f * dz
-                    fz[b[1]] -= f * dz
-                for i in range(self.num_beads):
-                    xt += fx[i] * dt
-                    yt += fy[i] * dt
-                    zt += fy[i] * dt
-                    if periodic:
-                        x[i], y[i], z[i] = box.periodic_correct(xt, yt, zt)
+                    f = (bond_length/r - 1.0)
+                    if b[0] in fixed_coords or b[1] in fixed_coords:
+                        mult = 0.5
                     else:
-                        if box.check_in_box(xt, yt, xt):
-                            x[i], y[i], z[i] = xt, yt, zt
-    
+                        mult = 1.0
+                    fx[b[0]] += f * dx * mult
+                    fx[b[1]] -= f * dx * mult
+                    fy[b[0]] += f * dy * mult
+                    fy[b[1]] -= f * dy * mult
+                    fz[b[0]] += f * dz * mult
+                    fz[b[1]] -= f * dz * mult
+                # print(r_min, r_max)
+                for i in range(self.num_beads):
+                    if not (i in fixed_coords):
+                        xt = x[i] + fx[i] * dt
+                        yt = y[i] + fy[i] * dt
+                        zt = z[i] + fz[i] * dt
+                        if periodic:
+                            x[i], y[i], z[i] = box.periodic_correct(xt, yt, zt)
+                        else:
+                            if box.check_in_box(xt, yt, xt):
+                                x[i], y[i], z[i] = xt, yt, zt
+
         return x, y, z
-    
+
 # class Chain(MolGraph):
 #     def __init__(self, n_beads: int):
 #         self.n_beads = n_beads
 #         self.bonds: Bondtype = [(0, 1), (1, 2)]
 #         super().__init__(self.bonds)
 
-    
+
 if __name__ == '__main__':
-    box = Box(2., 2., 2.)
+    box = Box(10., 10., 10.)
     graph = MolGraph([(2, 1), (2, 3), (3, 4), (4, 5), (0, 1)], sort=True)
-    #graph.get_coords(fixed_coords={0: (-1,-1,-1), 5: (1,1,1)}, box=box)
-    x, y, z = graph.get_coords(box=box, fixed_coords=None, periodic=False, iteration_limit=10000)
-    print(x,y,z)
+    # graph.get_coords(fixed_coords={0: (-1,-1,-1), 5: (1,1,1)}, box=box)
+    x, y, z = graph.get_coords(fixed_coords={0: (-1, -1, -1), 5: (1, 1, 1)},
+                               box=box,
+                               iteration_limit=10000)
+    print(x, y, z)
