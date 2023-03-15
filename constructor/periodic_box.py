@@ -14,6 +14,10 @@ class Box():
         self.x = x
         self.y = y
         self.z = z
+    
+    @property    
+    def volume(self) -> float:
+        return self.x * self.y * self.z
 
     def periodic_correct(self, 
                          xb: float, 

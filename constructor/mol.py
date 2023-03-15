@@ -48,7 +48,6 @@ class Dendron(MolGraph):
                 for j in range(self.n):
                     current_id += 1
                     if j == 0:
-                        print(id0, 'test')
                         bonds.append((id0, current_id))
                     else:
                         bonds.append((current_id-1, current_id))
