@@ -40,3 +40,18 @@ def print_fixed(fixed_list: List[int]):
     for fix in fixed_list:
         ffixed.write(f'{fix}\n')
     ffixed.close()
+    
+def print_ent_file(x: np.ndarray,
+                y: np.ndarray,
+                z: np.ndarray,
+                b_type: np.ndarray):
+    file = open('ent_file.ent', 'w')
+    types = {1: 'N', 2: 'O', 3: 'C'}
+    temp = 0
+    for x, y, z, t in zip(x, y, z, b_type):
+        temp += 1
+        file.write(f'HETATM%5d  {types[t]}%12d' % (temp, temp) +'%12.3f%8.3f%8.3f \n' % (x, y, z))
+    file.close()
+    
+    
+    

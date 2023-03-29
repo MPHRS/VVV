@@ -89,9 +89,10 @@ class Brush(MolGraph):
         self.q = q
         self.n_end_ch = n_end_ch
         self.l_end_ch = l_end_ch
-        self.types = {}
+        self.types = list()
         bonds: Bondtype = []
-
+        self.types = [1] * self.l_end_ch + [2] * self.pd * self.m +[1] * self.l_end_ch
+        
         for i in range(self.n_end_ch * self.l_end_ch + self.pd * self.m - 1):
             bonds.append((i, i+1))
             if (i < self.l_end_ch) or (i >= self.l_end_ch + self.pd * self.m ):
@@ -100,6 +101,7 @@ class Brush(MolGraph):
                     self.types[i + 1] = 1
             else:
                 self.types[i] = 2
+            
 
         n_curent = self.pd * self.m - 1 + self.n_end_ch * self.l_end_ch
         for i in range(1, self.pd + 1):
@@ -116,10 +118,12 @@ class Brush(MolGraph):
                         bonds.append((n_curent-1, n_curent))
 
         super().__init__(bonds, sort=False)
-        for element in bonds:
-            for bond in element:
-                if bond not in self.types:
-                    self.types[bond] = 2
+        # for element in bonds:
+        #     for bond in element:
+        #         if bond not in self.types:
+        #             self.types[bond] = 2
+        self.types = self.types + [3] * (self.num_beads - self.n_end_ch * self.l_end_ch - self.pd*self.m) 
+                                                        
 
 if __name__ == '__main__':
     # chain = Chain(n=5)
