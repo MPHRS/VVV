@@ -3,13 +3,20 @@ from bondset import Bondtype
 from dpd_files import print_bonds, print_coord, print_fixed
 from mol import Dendron
 from periodic_box import Box
+from scipy import interpolate
 
 if __name__ == '__main__':
     main_chain = 50
     n = 3
-    g = 4
+    g = 1
     length_bond = (1/3)**(1/3)
-    h_xy = (g+1) * n * length_bond * 2 + 1
+    N = (2**(g+1) - 1) * n
+    lmbd = [1.571, 1.846, 2.379, 3.164,	4.294] #for intepolation
+    x_g = [0, 1, 2, 3, 4] #for intepolation
+    lmbd_g = interpolate.InterpolatedUnivariateSpline(x_g, lmbd)
+    #h_xy = (g+1) * n * length_bond * 2 + 1
+    h_xy = 2 * (4*N**3/(3*np.pi*lmbd_g(g)**2))**0.25 * length_bond
+    
     box = Box(x=h_xy, y=h_xy, z=main_chain*length_bond)
     x = np.array([])
     y = np.array([])
