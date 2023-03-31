@@ -6,8 +6,6 @@ from periodic_box import Box
 import os
 def main(m, n):
     num_ch = 400 #number of chains
-    
-
     # m = 3 # spacer length
     pd = 75/m #polymerization degree
     # n = 4 # side chain length
