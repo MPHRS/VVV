@@ -91,7 +91,7 @@ class Brush(MolGraph):
         self.l_end_ch = l_end_ch
         self.types = list()
         bonds: Bondtype = []
-        self.types = [1] * self.l_end_ch + [2] * self.pd * self.m +[1] * self.l_end_ch
+        self.types = [1] * self.l_end_ch + [2] * self.pd * self.m + [1] * self.l_end_ch
         
         for i in range(self.n_end_ch * self.l_end_ch + self.pd * self.m - 1):
             bonds.append((i, i+1))
